@@ -1,3 +1,6 @@
+/**
+ * Servicio CRUD y análisis de emisiones (variación, totales y agregaciones).
+ */
 package sv.edu.udb.emisiones.service.implementation;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -30,12 +33,14 @@ public class EmisionServiceImpl implements EmisionService {
     private final SubsectorRepository subsectorRepository;
     private final EmisionMapper emisionMapper;
 
+    /** Listar todas las emisiones (mapeadas a Response). */
     @Override
     @Transactional(readOnly = true)
     public List<EmisionResponse> findAll() {
         return emisionMapper.toResponseList(emisionRepository.findAll());
     }
 
+    /** Buscar emisión por ID (404 si no existe). */
     @Override
     @Transactional(readOnly = true)
     public EmisionResponse findById(Long id) {
@@ -44,6 +49,7 @@ public class EmisionServiceImpl implements EmisionService {
         return emisionMapper.toResponse(emision);
     }
 
+    /** Crear nueva emisión (valida sector/subsector). */
     @Override
     @Transactional
     public EmisionResponse save(EmisionRequest request) {
@@ -64,6 +70,7 @@ public class EmisionServiceImpl implements EmisionService {
         return emisionMapper.toResponse(saved);
     }
 
+    /** Actualizar emisión existente (valida sector/subsector). */
     @Override
     @Transactional
     public EmisionResponse update(Long id, EmisionRequest request) {
@@ -90,6 +97,7 @@ public class EmisionServiceImpl implements EmisionService {
         return emisionMapper.toResponse(updated);
     }
 
+    /** Eliminar emisión por ID (404 si no existe). */
     @Override
     @Transactional
     public void delete(Long id) {
@@ -99,18 +107,21 @@ public class EmisionServiceImpl implements EmisionService {
         emisionRepository.deleteById(id);
     }
 
+    /** Listar emisiones por año. */
     @Override
     @Transactional(readOnly = true)
     public List<EmisionResponse> findByAnio(Integer anio) {
         return emisionMapper.toResponseList(emisionRepository.findByAnio(anio));
     }
 
+    /** Listar emisiones por rango de años. */
     @Override
     @Transactional(readOnly = true)
     public List<EmisionResponse> findByRangoAnios(Integer inicio, Integer fin) {
         return emisionMapper.toResponseList(emisionRepository.findByRangoAnios(inicio, fin));
     }
 
+    /** Análisis de variación total y por sector entre períodos. */
     @Override
     @Transactional(readOnly = true)
     public AnalisisVariacionResponse analizarVariacion(Integer anioBaseInicio, Integer anioBaseFin, Integer anioComparacion) {
@@ -124,13 +135,16 @@ public class EmisionServiceImpl implements EmisionService {
                 totalBase, totalComparacion, emisionesBase, emisionesComparacion);
     }
 
-    // Métodos auxiliares privados
+    // ====== Auxiliares de agregación y análisis ======
+
+    /** Suma TCO₂ de una lista de emisiones. */
     private Double calcularTotalEmisiones(List<Emision> emisiones) {
         return emisiones.stream()
                 .mapToDouble(Emision::getCantidadTCO2)
                 .sum();
     }
 
+    /** Construye DTO con totales, variaciones, contribuciones y texto de tendencia. */
     private AnalisisVariacionResponse construirRespuestaAnalisis(Integer anioBaseInicio, Integer anioBaseFin,
                                                                  Integer anioComparacion, Double totalBase,
                                                                  Double totalComparacion, List<Emision> emisionesBase,
@@ -159,6 +173,7 @@ public class EmisionServiceImpl implements EmisionService {
                 .build();
     }
 
+    /** % variación por sector entre base y comparación. */
     private Map<String, Double> calcularVariacionPorSector(List<Emision> base, List<Emision> comparacion) {
         Map<String, Double> variacion = new HashMap<>();
 
@@ -187,6 +202,7 @@ public class EmisionServiceImpl implements EmisionService {
         return variacion;
     }
 
+    /** % contribución de cada sector al total. */
     private Map<String, Double> calcularContribucionPorSector(List<Emision> emisiones, Double total) {
         if (total == 0) return new HashMap<>();
 
@@ -200,6 +216,7 @@ public class EmisionServiceImpl implements EmisionService {
                 ));
     }
 
+    /** Categorización de tendencia por umbrales. */
     private String determinarTendencia(Double variacionPorcentual) {
         if (variacionPorcentual < -5) return "DECRECIENTE_FUERTE";
         if (variacionPorcentual < 0) return "DECRECIENTE_SUAVE";
@@ -208,6 +225,7 @@ public class EmisionServiceImpl implements EmisionService {
         return "CRECIENTE_FUERTE";
     }
 
+    /** Mensaje corto según tendencia. */
     private String generarInterpretacion(String tendencia, Double variacionPorcentual) {
         switch (tendencia) {
             case "DECRECIENTE_FUERTE":
@@ -225,12 +243,14 @@ public class EmisionServiceImpl implements EmisionService {
         }
     }
 
+    /** (Pendiente) Variación acotada a un sector. */
     @Override
     public AnalisisVariacionResponse analizarVariacionPorSector(Long sectorId, Integer anioBaseInicio, Integer anioBaseFin, Integer anioComparacion) {
         // Implementación específica por sector
         return null;
     }
 
+    /** Totales por sector en un año. */
     @Override
     public Map<String, Double> obtenerTotalEmisionesPorSector(Integer anio) {
         List<Object[]> resultados = emisionRepository.findTotalEmisionesPorSector(anio);
@@ -241,6 +261,7 @@ public class EmisionServiceImpl implements EmisionService {
                 ));
     }
 
+    /** Totales agregados por año. */
     @Override
     public Map<Integer, Double> obtenerTotalEmisionesPorAnio() {
         List<Object[]> resultados = emisionRepository.findTotalEmisionesPorAnio();
@@ -251,6 +272,7 @@ public class EmisionServiceImpl implements EmisionService {
                 ));
     }
 
+    /** (Simplificado) Promedios mensuales por período. */
     @Override
     public Map<String, Double> obtenerEmisionesMensualesPromedio(Integer anioInicio, Integer anioFin) {
         // Implementación simplificada

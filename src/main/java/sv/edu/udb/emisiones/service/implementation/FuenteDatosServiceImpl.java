@@ -1,3 +1,6 @@
+/**
+ * Servicio CRUD para las fuentes de datos.
+ */
 package sv.edu.udb.emisiones.service.implementation;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -22,12 +25,14 @@ public class FuenteDatosServiceImpl implements FuenteDatosService {
     private final FuenteDatosRepository fuenteDatosRepository;
     private final FuenteDatosMapper fuenteDatosMapper;
 
+    /** Listar todas las fuentes. */
     @Override
     @Transactional(readOnly = true)
     public List<FuenteDatosResponse> findAll() {
         return fuenteDatosMapper.toResponseList(fuenteDatosRepository.findAll());
     }
 
+    /** Buscar fuente por ID. */
     @Override
     @Transactional(readOnly = true)
     public FuenteDatosResponse findById(Long id) {
@@ -36,6 +41,7 @@ public class FuenteDatosServiceImpl implements FuenteDatosService {
         return fuenteDatosMapper.toResponse(fuente);
     }
 
+    /** Crear nueva fuente de datos. */
     @Override
     @Transactional
     public FuenteDatosResponse save(FuenteDatosRequest request) {
@@ -44,6 +50,7 @@ public class FuenteDatosServiceImpl implements FuenteDatosService {
         return fuenteDatosMapper.toResponse(saved);
     }
 
+    /** Actualizar fuente existente. */
     @Override
     @Transactional
     public FuenteDatosResponse update(Long id, FuenteDatosRequest request) {
@@ -60,6 +67,7 @@ public class FuenteDatosServiceImpl implements FuenteDatosService {
         return fuenteDatosMapper.toResponse(updated);
     }
 
+    /** Eliminar fuente por ID. */
     @Override
     @Transactional
     public void delete(Long id) {
@@ -69,18 +77,21 @@ public class FuenteDatosServiceImpl implements FuenteDatosService {
         fuenteDatosRepository.deleteById(id);
     }
 
+    /** Buscar fuentes por organismo. */
     @Override
     @Transactional(readOnly = true)
     public List<FuenteDatosResponse> findByOrganismo(String organismo) {
         return fuenteDatosMapper.toResponseList(fuenteDatosRepository.findByOrganismo(organismo));
     }
 
+    /** Listar fuentes marcadas como confiables. */
     @Override
     @Transactional(readOnly = true)
     public List<FuenteDatosResponse> findByEsConfiableTrue() {
         return fuenteDatosMapper.toResponseList(fuenteDatosRepository.findByEsConfiableTrue());
     }
 
+    /** Contar cuántas fuentes hay por organismo. */
     @Override
     @Transactional(readOnly = true)
     public Map<String, Long> countByOrganismo() {

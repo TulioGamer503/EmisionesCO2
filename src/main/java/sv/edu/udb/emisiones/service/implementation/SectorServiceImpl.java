@@ -1,3 +1,6 @@
+/**
+ * Servicio CRUD para sectores y gestión de subsectores.
+ */
 package sv.edu.udb.emisiones.service.implementation;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -25,12 +28,14 @@ public class SectorServiceImpl implements SectorService {
     private final SubsectorRepository subsectorRepository;
     private final SectorMapper sectorMapper;
 
+    /** Listar todos los sectores. */
     @Override
     @Transactional(readOnly = true)
     public List<SectorResponse> findAll() {
         return sectorMapper.toResponseList(sectorRepository.findAll());
     }
 
+    /** Buscar sector por ID. */
     @Override
     @Transactional(readOnly = true)
     public SectorResponse findById(Long id) {
@@ -39,6 +44,7 @@ public class SectorServiceImpl implements SectorService {
         return sectorMapper.toResponse(sector);
     }
 
+    /** Buscar sector por nombre. */
     @Override
     @Transactional(readOnly = true)
     public SectorResponse findByNombre(String nombre) {
@@ -47,6 +53,7 @@ public class SectorServiceImpl implements SectorService {
         return sectorMapper.toResponse(sector);
     }
 
+    /** Crear nuevo sector (valida duplicados). */
     @Override
     @Transactional
     public SectorResponse save(SectorRequest request) {
@@ -59,6 +66,7 @@ public class SectorServiceImpl implements SectorService {
         return sectorMapper.toResponse(saved);
     }
 
+    /** Actualizar sector existente (valida duplicados). */
     @Override
     @Transactional
     public SectorResponse update(Long id, SectorRequest request) {
@@ -77,6 +85,7 @@ public class SectorServiceImpl implements SectorService {
         return sectorMapper.toResponse(updated);
     }
 
+    /** Eliminar sector (valida dependencias de emisiones). */
     @Override
     @Transactional
     public void delete(Long id) {
@@ -92,6 +101,7 @@ public class SectorServiceImpl implements SectorService {
         sectorRepository.deleteById(id);
     }
 
+    /** Listar sectores con sus subsectores. */
     @Override
     @Transactional(readOnly = true)
     public List<SectorResponse> findAllWithSubsectores() {
@@ -99,6 +109,7 @@ public class SectorServiceImpl implements SectorService {
         return sectorMapper.toResponseList(sectores);
     }
 
+    /** Contar subsectores asociados a cada sector. */
     @Override
     @Transactional(readOnly = true)
     public Map<String, Long> contarSubsectoresPorSector() {
@@ -110,6 +121,7 @@ public class SectorServiceImpl implements SectorService {
                 ));
     }
 
+    /** Agregar un nuevo subsector a un sector existente. */
     @Override
     @Transactional
     public SectorResponse agregarSubsectorASector(Long sectorId, String nombreSubsector, String tipo, String intensidad) {

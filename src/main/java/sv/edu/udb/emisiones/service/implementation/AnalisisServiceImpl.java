@@ -1,3 +1,6 @@
+/**
+ * Servicio de análisis (variación pandemia, referentes, proyecciones, Kaya y consistencia).
+ */
 package sv.edu.udb.emisiones.service.implementation;
 
 import lombok.RequiredArgsConstructor;
@@ -21,6 +24,7 @@ public class AnalisisServiceImpl implements AnalisisService {
     private final AnalisisRepository analisisRepository;
     private final EmisionRepository emisionRepository;
 
+    /** Variación 2020 vs. promedio 2015–2019 y resumen interpretativo. */
     @Override
     @Transactional(readOnly = true)
     public AnalisisVariacionResponse analizarVariacionPandemia() {
@@ -49,6 +53,7 @@ public class AnalisisServiceImpl implements AnalisisService {
                 .build();
     }
 
+    /** Compara variación local con referentes (AL, Global, CA) y posiciona el resultado. */
     @Override
     @Transactional(readOnly = true)
     public AnalisisComparativoResponse compararConReferentesGlobales() {
@@ -74,6 +79,7 @@ public class AnalisisServiceImpl implements AnalisisService {
                 .build();
     }
 
+    /** Proyección lineal simple con escenarios +/-20% a partir del año actual. */
     @Override
     @Transactional(readOnly = true)
     public ProyeccionResponse proyectarEmisiones(Integer aniosFuturo) {
@@ -110,6 +116,7 @@ public class AnalisisServiceImpl implements AnalisisService {
                 .build();
     }
 
+    /** Indicadores de la identidad de Kaya y comparación con emisiones reales. */
     @Override
     @Transactional(readOnly = true)
     public Map<String, Object> calcularIndicadoresKaya(Integer anio) {
@@ -135,6 +142,7 @@ public class AnalisisServiceImpl implements AnalisisService {
         return indicadores;
     }
 
+    /** Chequeos básicos de calidad/consistencia del dataset. */
     @Override
     @Transactional(readOnly = true)
     public ReporteConsistenciaResponse verificarConsistenciaDatos() {
@@ -155,7 +163,9 @@ public class AnalisisServiceImpl implements AnalisisService {
                 .build();
     }
 
-    // Métodos auxiliares privados
+    // ====== Auxiliares privados ======
+
+    /** Suma anual de TCO₂ para un año dado. */
     private Double calcularTotalAnual(Integer anio) {
         List<sv.edu.udb.emisiones.domain.Emision> emisiones = emisionRepository.findByAnio(anio);
         return emisiones.stream()
@@ -163,6 +173,7 @@ public class AnalisisServiceImpl implements AnalisisService {
                 .sum();
     }
 
+    /** Clasifica la variación 2020 en categorías de tendencia. */
     private String determinarTendenciaPandemia(Double variacion) {
         if (variacion < -10) return "REDUCCION_SIGNIFICATIVA";
         if (variacion < -5) return "REDUCCION_MODERADA";
@@ -171,6 +182,7 @@ public class AnalisisServiceImpl implements AnalisisService {
         return "AUMENTO";
     }
 
+    /** Mensaje corto según signo de la variación 2020. */
     private String generarInterpretacionPandemia(Double variacion2020) {
         if (variacion2020 < 0) {
             return "Reducción durante confinamientos por COVID-19";
@@ -179,6 +191,7 @@ public class AnalisisServiceImpl implements AnalisisService {
         }
     }
 
+    /** Posición relativa vs. referentes (mejor/mayoría/similar). */
     private String determinarPosicionRelativa(Double variacionSV, Map<String, Double> referentes) {
         long mejorQue = referentes.values().stream()
                 .filter(ref -> variacionSV < ref)
@@ -189,6 +202,7 @@ public class AnalisisServiceImpl implements AnalisisService {
         return "SIMILAR_O_INFERIOR";
     }
 
+    /** Texto comparativo contra promedio de referentes. */
     private String generarInterpretacionComparativa(Double variacionSV, Map<String, Double> referentes) {
         double promedioReferentes = referentes.values().stream()
                 .mapToDouble(Double::doubleValue)
@@ -204,6 +218,7 @@ public class AnalisisServiceImpl implements AnalisisService {
         }
     }
 
+    /** Heurística simple del driver principal (económico/energético/carbono/multifactorial). */
     private String identificarDriverPrincipal(Map<String, Object> indicadores) {
         double pibPerCapita = (Double) indicadores.get("pibPerCapita");
         double intensidadEnergetica = (Double) indicadores.get("intensidadEnergetica");
